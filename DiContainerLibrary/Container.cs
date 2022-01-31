@@ -36,7 +36,7 @@ namespace DiContainerLibrary
             var ctors = concreteType.GetConstructors();
             if (ctors.Count() > 1)
             {
-                throw new AmbiguousMatchException($"Cannot find a default constructor for {concreteType.FullName}");
+                throw new AmbiguousMatchException($"Cannot register {concreteType.FullName}. It has more than one constructor.");
             }
 
             var ctor = ctors.First();
