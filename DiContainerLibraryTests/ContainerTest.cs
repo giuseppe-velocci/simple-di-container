@@ -1,4 +1,5 @@
 using DiContainerLibrary;
+using System.Reflection;
 using Xunit;
 
 namespace DiContainerLibraryTests
@@ -42,13 +43,9 @@ namespace DiContainerLibraryTests
         }
         
         [Fact]
-        public void Should_Register_Instances_Also_From_Interface_Using_Ctor_With_Less_Params()
+        public void Should_Fail_Registeration_If_Class_Has_More_Than_One_Ctor()
         {
-            MyEmployee instance = new MyEmployee();
-            Sut.Register<IMyEmployee, MyEmployee>();
-            IMyEmployee resolved = (IMyEmployee)Sut.Resolve<IMyEmployee>();
-
-            Assert.Equal(instance.GetName(), resolved.GetName());
+            Assert.Throws<AmbiguousMatchException>(() => Sut.Register<IMyEmployee, MyEmployee>());
         }
 
         [Fact]

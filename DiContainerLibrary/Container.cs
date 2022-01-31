@@ -34,10 +34,12 @@ namespace DiContainerLibrary
         private void RegisterWithDefaultCtor<ConcreteType>(Type concreteType) where ConcreteType : class
         {
             var ctors = concreteType.GetConstructors();
-            int minCtorParams = ctors.Min(x => x.GetParameters().Length);
-            var ctor = ctors
-                .Where(x => x.GetParameters().Length == minCtorParams)
-                .FirstOrDefault();
+            if (ctors.Count() > 1)
+            {
+                throw new AmbiguousMatchException($"Cannot find a default constructor for {concreteType.FullName}");
+            }
+
+            var ctor = ctors.First();
             ParameterInfo[] parameters = ctor.GetParameters();
             object[] instances = parameters.Select(x => Resolve(x.ParameterType)).ToArray();
             object instance = ctor.Invoke(instances);
