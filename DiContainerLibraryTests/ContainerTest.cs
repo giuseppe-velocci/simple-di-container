@@ -36,7 +36,7 @@ namespace DiContainerLibraryTests
             MyManager instance = new MyManager();
             Sut.Register<IMyManager>(instance);
             Sut.Register<IMyEmployee, MyManagedEmployee>();
-            MyManagedEmployee resolved = (MyManagedEmployee)Sut.Resolve<IMyEmployee>();
+            MyManagedEmployee resolved = Sut.Resolve<MyManagedEmployee>();
 
             Assert.Equal(instance, Sut.Resolve<IMyManager>());
             Assert.Equal(instance.GetName(), resolved.GetManagerName());

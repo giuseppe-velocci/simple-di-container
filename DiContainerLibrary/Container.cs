@@ -7,21 +7,22 @@ namespace DiContainerLibrary
 {
     public class Container
     {
-        private IDictionary<Type, object> Registry { get; }
+        private IDictionary<Type, Resolver> Registry { get; }
 
         public Container()
         {
-            Registry = new Dictionary<Type, object>();
+            Registry = new Dictionary<Type, Resolver>();
         }
 
         public void Register<ConcreteType>(object instance) where ConcreteType : class
         {
-            Registry.Add(new KeyValuePair<Type, object>(typeof(ConcreteType), instance));
+            var resolver = new Resolver(() => instance, ResolverType.Singleton);
+            Registry.Add(new KeyValuePair<Type, Resolver>(typeof(ConcreteType), resolver));
         }
 
         public void Register<AbstractType, ConcreteType>() where AbstractType : class where ConcreteType : class
         {
-            object result;
+            Resolver result;
             var concreteType = typeof(ConcreteType);
             Registry.TryGetValue(concreteType, out result);
             if (result is null)
@@ -46,16 +47,16 @@ namespace DiContainerLibrary
             Register<ConcreteType>(instance);
         }
 
-        public object Resolve<GenericType>() where GenericType : class
+        public GenericType Resolve<GenericType>() where GenericType : class
         {
-            return Resolve(typeof(GenericType));
+            return (GenericType)Resolve(typeof(GenericType));
         }
 
         private object Resolve(Type instanceType)
         {
-            object result;
+            Resolver result;
             Registry.TryGetValue(instanceType, out result);
-            return result;
+            return result is null ? null : result.Resolve();
         }
     }
 }
