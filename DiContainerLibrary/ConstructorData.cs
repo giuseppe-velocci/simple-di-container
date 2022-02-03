@@ -5,17 +5,17 @@ namespace DiContainerLibrary
 {
     class ConstructorData
     {
-        public Type ConcreteType { get; }
+        public Type InstanceType { get; }
         public ConstructorInfo Ctor { get; }
         public ParameterInfo[] Parameters { get; }
 
         public ConstructorData(
-            Type concreteType,
+            Type instanceType,
             ConstructorInfo ctor,
             ParameterInfo[] parameters
         )
         {
-            ConcreteType = concreteType;
+            InstanceType = instanceType;
             Ctor = ctor;
             Parameters = parameters;
         }
