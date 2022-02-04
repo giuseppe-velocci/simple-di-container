@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace DiContainerLibrary
 {
@@ -27,14 +26,13 @@ namespace DiContainerLibrary
 
         public void RegisterSingleton<InstanceType>() where InstanceType : class
         {
-            var ctorData = GetConstructorData<InstanceType>();
-            if (ctorData.Parameters.Any(x => IsResolverTransient(x.ParameterType)))
+            var ctorData = ConstructorData.GetConstructorData<InstanceType>();
+            if (ctorData.Parameters.Any(x => IsResolverTransient(x)))
             {
                 throw new ArgumentException($"Singleton class {ctorData.InstanceType.FullName} cannot have transient dependencies");
             }
 
-            object[] instances = ctorData.Parameters.Select(x => Resolve(x.ParameterType)).ToArray();
-            object instance = ctorData.Ctor.Invoke(instances);
+            object instance = ctorData.BuildInstance(this);
             RegisterSingleton<InstanceType>(instance);
         }
 
@@ -58,8 +56,8 @@ namespace DiContainerLibrary
 
         public void RegisterTransient<InstanceType>()
         {
-            var ctorData = GetConstructorData<InstanceType>();
-            if (ctorData.Parameters.Any(x => ! Registry.ContainsKey(x.ParameterType)))
+            var ctorData = ConstructorData.GetConstructorData<InstanceType>();
+            if (ctorData.Parameters.Any(x => ! Registry.ContainsKey(x)))
             {
                 throw new NullReferenceException();
             }
@@ -83,19 +81,6 @@ namespace DiContainerLibrary
             }
 
             return resolver.Resolve();
-        }
-
-        private ConstructorData GetConstructorData<ConcreteType>()
-        {
-            var concreteType = typeof(ConcreteType);
-            ConstructorInfo[] ctors = concreteType.GetConstructors();
-            if (ctors.Count() > 1)
-            {
-                throw new AmbiguousMatchException($"Cannot register {concreteType.FullName}. It has more than one constructor.");
-            }
-            var ctor = ctors.First();
-
-            return new ConstructorData(concreteType, ctor, ctor.GetParameters());
         }
 
         private Resolver GetResolver<InstanceType>()

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace DiContainerLibrary
 {
@@ -15,6 +13,12 @@ namespace DiContainerLibrary
             Lifecycle = type;
         }
 
+        public static Resolver SingletonResolver(Container container, ConstructorData ctorData)
+        {
+            object instance = ctorData.BuildInstance(container);
+            return SingletonResolver(instance);
+        }
+
         public static Resolver SingletonResolver(object instance)
         {
             return new Resolver(() => instance, Lifecycle.Singleton);
@@ -22,12 +26,7 @@ namespace DiContainerLibrary
 
         public static Resolver TransientResolver(Container container, ConstructorData ctorData)
         {
-            return new Resolver(() =>
-            {
-                object[] parameterInstances = ctorData.Parameters.Select(x => container.Resolve(x.ParameterType)).ToArray();
-                return ctorData.Ctor.Invoke(parameterInstances);
-            },
-            Lifecycle.Transient);
+            return new Resolver(() => ctorData.BuildInstance(container), Lifecycle.Transient);
         }
     }
 
