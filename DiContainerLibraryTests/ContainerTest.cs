@@ -42,7 +42,7 @@ namespace DiContainerLibraryTests
 
             Assert.Equal(instance, Sut.Resolve<IMyManager>());
             Assert.Equal(instance.GetName(), resolved.GetManagerName());
-            Assert.Equal(MyManagedEmployee.Name, resolvedAsInterface.GetName());
+            Assert.Equal(resolved, resolvedAsInterface);
         }
         
         [Fact]
@@ -77,9 +77,30 @@ namespace DiContainerLibraryTests
         }
 
         [Fact]
-        public void Should_Return_Null_Resolving_Unregistered_Instances_As_Singleton()
+        public void Should_Throw_Null_Exception_When_Resolving_Unregistered_Instances_As_Singleton()
         {
-            Assert.Null(Sut.Resolve<object>());
+            Assert.Throws<NullReferenceException>(() => Sut.Resolve<object>());
+        }
+
+        [Fact]
+        public void Should_Throw_Exception_And_Fail_Registration_When_Type_HasAlready_Been_Registered()
+        {
+            Sut.RegisterTransient<object>();
+            Assert.Throws<ArgumentException>(() => Sut.RegisterTransient<object>());
+        }
+
+        [Fact]
+        public void Should_Throw_Exception_And_Fail_Registration_For_Transient_When_Depencency_Was_Not_Registered()
+        {
+            Assert.Throws<NullReferenceException>(() => Sut.RegisterTransient<IMyEmployee, MyManagedEmployee>());
+            Assert.Throws<NullReferenceException>(() => Sut.RegisterTransient<MyManagedEmployee>());
+        }
+
+        [Fact]
+        public void Should_Throw_Exception_And_Fail_Registration_ForSingleton_When_Depencency_Was_Not_Registered()
+        {
+            Assert.Throws<NullReferenceException>(() => Sut.RegisterSingleton<IMyEmployee, MyManagedEmployee>());
+            Assert.Throws<NullReferenceException>(() => Sut.RegisterSingleton<MyManagedEmployee>());
         }
     }
 

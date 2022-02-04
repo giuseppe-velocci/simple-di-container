@@ -14,12 +14,6 @@ namespace DiContainerLibrary
             Registry = new Dictionary<Type, Resolver>();
         }
 
-        public void RegisterSingleton<ConcreteType>(object instance) where ConcreteType : class
-        {
-            var resolver = new Resolver(() => instance, ResolverType.Singleton);
-            Registry.Add(new KeyValuePair<Type, Resolver>(typeof(ConcreteType), resolver));
-        }
-
         public void RegisterSingleton<AbstractType, ConcreteType>() where AbstractType : class where ConcreteType : class
         {
             Resolver result = GetResolver<ConcreteType>();
@@ -27,20 +21,27 @@ namespace DiContainerLibrary
             {
                 RegisterSingleton<ConcreteType>();
             }
+
             RegisterSingleton<AbstractType>(Resolve<ConcreteType>());
         }
 
-        public void RegisterSingleton<ConcreteType>() where ConcreteType : class
+        public void RegisterSingleton<InstanceType>() where InstanceType : class
         {
-            var ctorData = GetConstructorData<ConcreteType>();
-            if (ctorData.Parameters.Any(x => IsResolverSingleton(x.ParameterType)))
+            var ctorData = GetConstructorData<InstanceType>();
+            if (ctorData.Parameters.Any(x => IsResolverTransient(x.ParameterType)))
             {
-                throw new ArgumentException($"Singleton class {ctorData.ConcreteType.FullName} cannot have transient dependencies");
+                throw new ArgumentException($"Singleton class {ctorData.InstanceType.FullName} cannot have transient dependencies");
             }
 
             object[] instances = ctorData.Parameters.Select(x => Resolve(x.ParameterType)).ToArray();
             object instance = ctorData.Ctor.Invoke(instances);
-            RegisterSingleton<ConcreteType>(instance);
+            RegisterSingleton<InstanceType>(instance);
+        }
+
+        public void RegisterSingleton<InstanceType>(object instance) where InstanceType : class
+        {
+            var resolver = new Resolver(() => instance, Lifecycle.Singleton);
+            Add(typeof(InstanceType), resolver);
         }
 
         public void RegisterTransient<AbstractType, ConcreteType>() where AbstractType : class where ConcreteType : class
@@ -50,24 +51,31 @@ namespace DiContainerLibrary
             {
                 RegisterTransient<ConcreteType>();
             }
-            Registry.Add(typeof(AbstractType), new Resolver(() => Resolve<ConcreteType>(), ResolverType.Transient));
+
+            Resolver transientResolver = new Resolver(() => Resolve<ConcreteType>(), Lifecycle.Transient);
+            Add(typeof(AbstractType), transientResolver);
         }
 
-        public void RegisterTransient<ConcreteType>()
+        public void RegisterTransient<InstanceType>()
         {
-            var ctorData = GetConstructorData<ConcreteType>();
+            var ctorData = GetConstructorData<InstanceType>();
+            if (ctorData.Parameters.Any(x => ! Registry.ContainsKey(x.ParameterType)))
+            {
+                throw new NullReferenceException();
+            }
+
             Resolver resolver = new Resolver(() =>
             {
                 object[] instances = ctorData.Parameters.Select(x => Resolve(x.ParameterType)).ToArray();
                 return ctorData.Ctor.Invoke(instances);
             }, 
-            ResolverType.Transient);
-            Registry.Add(ctorData.ConcreteType, resolver);
+            Lifecycle.Transient);
+            Add(ctorData.InstanceType, resolver);
         }
 
-        public ConcreteType Resolve<ConcreteType>() where ConcreteType : class
+        public InstanceType Resolve<InstanceType>() where InstanceType : class
         {
-            return (ConcreteType)Resolve(typeof(ConcreteType));
+            return (InstanceType)Resolve(typeof(InstanceType));
         }
 
         private ConstructorData GetConstructorData<ConcreteType>()
@@ -83,26 +91,36 @@ namespace DiContainerLibrary
             return new ConstructorData(concreteType, ctor, ctor.GetParameters());
         }
 
-        private Resolver GetResolver<ConcreteType>()
+        private Resolver GetResolver<InstanceType>()
         {
             Resolver result;
-            var concreteType = typeof(ConcreteType);
+            var concreteType = typeof(InstanceType);
             Registry.TryGetValue(concreteType, out result);
             return result;
         }
 
-        private bool IsResolverSingleton(Type concreteType)
+        private bool IsResolverTransient(Type instanceType)
         {
             Resolver resolver;
-            Registry.TryGetValue(concreteType, out resolver);
-            return resolver.ResolverType is ResolverType.Transient;
+            Registry.TryGetValue(instanceType, out resolver);
+            return resolver.Lifecycle is Lifecycle.Transient;
         }
 
         private object Resolve(Type instanceType)
         {
-            Resolver result;
-            Registry.TryGetValue(instanceType, out result);
-            return result?.Resolve();
+            Resolver resolver;
+            Registry.TryGetValue(instanceType, out resolver);
+            if (resolver is null)
+            {
+                throw new NullReferenceException();
+            }
+
+            return resolver.Resolve();
+        }
+
+        private void Add(Type type, Resolver resolver)
+        {
+            Registry.Add(type, resolver);
         }
     }
 }

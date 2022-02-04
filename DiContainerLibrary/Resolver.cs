@@ -1,20 +1,21 @@
 ﻿using System;
+using System.Linq;
 
 namespace DiContainerLibrary
 {
     class Resolver
     {
         public Func<object> Resolve { get; }
-        public ResolverType ResolverType { get; }
+        public Lifecycle Lifecycle { get; }
 
-        public Resolver(Func<object> resolve, ResolverType type)
+        public Resolver(Func<object> resolve, Lifecycle type)
         {
             Resolve = resolve;
-            ResolverType = type;
+            Lifecycle = type;
         }
     }
 
-    enum ResolverType
+    enum Lifecycle
     {
         Singleton,
         Transient
