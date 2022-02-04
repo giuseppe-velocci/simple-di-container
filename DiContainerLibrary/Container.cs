@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace DiContainerLibrary
 {
@@ -27,20 +26,19 @@ namespace DiContainerLibrary
 
         public void RegisterSingleton<InstanceType>() where InstanceType : class
         {
-            var ctorData = GetConstructorData<InstanceType>();
-            if (ctorData.Parameters.Any(x => IsResolverTransient(x.ParameterType)))
+            var ctorData = ConstructorData.GetConstructorData<InstanceType>();
+            if (ctorData.Parameters.Any(x => IsResolverTransient(x)))
             {
                 throw new ArgumentException($"Singleton class {ctorData.InstanceType.FullName} cannot have transient dependencies");
             }
 
-            object[] instances = ctorData.Parameters.Select(x => Resolve(x.ParameterType)).ToArray();
-            object instance = ctorData.Ctor.Invoke(instances);
+            object instance = ctorData.BuildInstance(this);
             RegisterSingleton<InstanceType>(instance);
         }
 
         public void RegisterSingleton<InstanceType>(object instance) where InstanceType : class
         {
-            var resolver = new Resolver(() => instance, Lifecycle.Singleton);
+            var resolver = Resolver.SingletonResolver(instance);
             Add(typeof(InstanceType), resolver);
         }
 
@@ -52,24 +50,19 @@ namespace DiContainerLibrary
                 RegisterTransient<ConcreteType>();
             }
 
-            Resolver transientResolver = new Resolver(() => Resolve<ConcreteType>(), Lifecycle.Transient);
+            Resolver transientResolver = GetResolver<ConcreteType>();
             Add(typeof(AbstractType), transientResolver);
         }
 
         public void RegisterTransient<InstanceType>()
         {
-            var ctorData = GetConstructorData<InstanceType>();
-            if (ctorData.Parameters.Any(x => ! Registry.ContainsKey(x.ParameterType)))
+            var ctorData = ConstructorData.GetConstructorData<InstanceType>();
+            if (ctorData.Parameters.Any(x => ! Registry.ContainsKey(x)))
             {
                 throw new NullReferenceException();
             }
 
-            Resolver resolver = new Resolver(() =>
-            {
-                object[] instances = ctorData.Parameters.Select(x => Resolve(x.ParameterType)).ToArray();
-                return ctorData.Ctor.Invoke(instances);
-            }, 
-            Lifecycle.Transient);
+            Resolver resolver = Resolver.TransientResolver(this, ctorData);
             Add(ctorData.InstanceType, resolver);
         }
 
@@ -78,17 +71,16 @@ namespace DiContainerLibrary
             return (InstanceType)Resolve(typeof(InstanceType));
         }
 
-        private ConstructorData GetConstructorData<ConcreteType>()
+        public object Resolve(Type instanceType)
         {
-            var concreteType = typeof(ConcreteType);
-            ConstructorInfo[] ctors = concreteType.GetConstructors();
-            if (ctors.Count() > 1)
+            Resolver resolver;
+            Registry.TryGetValue(instanceType, out resolver);
+            if (resolver is null)
             {
-                throw new AmbiguousMatchException($"Cannot register {concreteType.FullName}. It has more than one constructor.");
+                throw new NullReferenceException();
             }
-            var ctor = ctors.First();
 
-            return new ConstructorData(concreteType, ctor, ctor.GetParameters());
+            return resolver.Resolve();
         }
 
         private Resolver GetResolver<InstanceType>()
@@ -104,18 +96,6 @@ namespace DiContainerLibrary
             Resolver resolver;
             Registry.TryGetValue(instanceType, out resolver);
             return resolver.Lifecycle is Lifecycle.Transient;
-        }
-
-        private object Resolve(Type instanceType)
-        {
-            Resolver resolver;
-            Registry.TryGetValue(instanceType, out resolver);
-            if (resolver is null)
-            {
-                throw new NullReferenceException();
-            }
-
-            return resolver.Resolve();
         }
 
         private void Add(Type type, Resolver resolver)

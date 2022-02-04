@@ -102,6 +102,18 @@ namespace DiContainerLibraryTests
             Assert.Throws<NullReferenceException>(() => Sut.RegisterSingleton<IMyEmployee, MyManagedEmployee>());
             Assert.Throws<NullReferenceException>(() => Sut.RegisterSingleton<MyManagedEmployee>());
         }
+
+        [Fact]
+        public void Should_Throw_Exception_And_Fail_Singleton_Registration_For_Interfaces()
+        {
+            Assert.Throws<InvalidOperationException>(() => Sut.RegisterSingleton<IMyEmployee>());
+        }
+
+        [Fact]
+        public void Should_Throw_Exception_And_Fail_Transient_Registration_For_Interfaces()
+        {
+            Assert.Throws<InvalidOperationException>(() => Sut.RegisterTransient<IMyEmployee>());
+        }
     }
 
     interface IMyEmployee
