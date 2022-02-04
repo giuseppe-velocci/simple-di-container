@@ -40,7 +40,7 @@ namespace DiContainerLibrary
 
         public void RegisterSingleton<InstanceType>(object instance) where InstanceType : class
         {
-            var resolver = new Resolver(() => instance, Lifecycle.Singleton);
+            var resolver = Resolver.SingletonResolver(instance);
             Add(typeof(InstanceType), resolver);
         }
 
@@ -52,7 +52,7 @@ namespace DiContainerLibrary
                 RegisterTransient<ConcreteType>();
             }
 
-            Resolver transientResolver = new Resolver(() => Resolve<ConcreteType>(), Lifecycle.Transient);
+            Resolver transientResolver = GetResolver<ConcreteType>();
             Add(typeof(AbstractType), transientResolver);
         }
 
@@ -64,18 +64,25 @@ namespace DiContainerLibrary
                 throw new NullReferenceException();
             }
 
-            Resolver resolver = new Resolver(() =>
-            {
-                object[] instances = ctorData.Parameters.Select(x => Resolve(x.ParameterType)).ToArray();
-                return ctorData.Ctor.Invoke(instances);
-            }, 
-            Lifecycle.Transient);
+            Resolver resolver = Resolver.TransientResolver(this, ctorData);
             Add(ctorData.InstanceType, resolver);
         }
 
         public InstanceType Resolve<InstanceType>() where InstanceType : class
         {
             return (InstanceType)Resolve(typeof(InstanceType));
+        }
+
+        public object Resolve(Type instanceType)
+        {
+            Resolver resolver;
+            Registry.TryGetValue(instanceType, out resolver);
+            if (resolver is null)
+            {
+                throw new NullReferenceException();
+            }
+
+            return resolver.Resolve();
         }
 
         private ConstructorData GetConstructorData<ConcreteType>()
@@ -104,18 +111,6 @@ namespace DiContainerLibrary
             Resolver resolver;
             Registry.TryGetValue(instanceType, out resolver);
             return resolver.Lifecycle is Lifecycle.Transient;
-        }
-
-        private object Resolve(Type instanceType)
-        {
-            Resolver resolver;
-            Registry.TryGetValue(instanceType, out resolver);
-            if (resolver is null)
-            {
-                throw new NullReferenceException();
-            }
-
-            return resolver.Resolve();
         }
 
         private void Add(Type type, Resolver resolver)
