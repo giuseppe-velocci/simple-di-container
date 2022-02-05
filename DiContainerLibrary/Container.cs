@@ -20,12 +20,7 @@ namespace DiContainerLibrary
 
         public void RegisterSingleton<InstanceType>() where InstanceType : class
         {
-            var ctorData = ConstructorData.InitializeConstructorData<InstanceType>();
-            if (ctorData.Parameters.Any(x => Registry.IsResolverTransient(x)))
-            {
-                throw new ArgumentException($"Singleton class {ctorData.InstanceType.FullName} cannot have transient dependencies");
-            }
-
+            var ctorData = GetSingletonConstructorData<InstanceType>();
             object instance = ctorData.BuildInstance(this);
             RegisterSingleton<InstanceType>(instance);
         }
@@ -43,13 +38,8 @@ namespace DiContainerLibrary
 
         public void RegisterTransient<InstanceType>()
         {
-            var ctorData = ConstructorData.InitializeConstructorData<InstanceType>();
-            if (ctorData.Parameters.Any(x => ! Registry.TypeExists(x)))
-            {
-                throw new NullReferenceException();
-            }
-
-            Resolver resolver = Resolver.TransientResolver(this, ctorData);
+            var ctorData = GetConstructorData<InstanceType>();
+            Resolver resolver = Resolver.TransientResolver(() => ctorData.BuildInstance(this));
             Registry.Add(ctorData.InstanceType, resolver);
         }
 
@@ -62,6 +52,29 @@ namespace DiContainerLibrary
         {
             Resolver resolver = Registry.FindResolver(instanceType);
             return resolver.Resolve();
+        }
+
+        private ConstructorData GetSingletonConstructorData<InstanceType>()
+        {
+            var ctorData = GetConstructorData<InstanceType>();
+            if (ctorData.ConstructorParameters.Any(x => Registry.IsResolverTransient(x)))
+            {
+                throw new ArgumentException($"Singleton class {ctorData.InstanceType.FullName} cannot have transient dependencies");
+            }
+            return ctorData;
+        }
+
+        private ConstructorData GetConstructorData<InstanceType>()
+        {
+            var ctorData = ConstructorData.InitializeConstructorData<InstanceType>();
+            if (ctorData.ConstructorParameters.Any(x => !Registry.TypeExists(x)))
+            {
+                throw new NullReferenceException(
+                    $"Class {ctorData.InstanceType.FullName} is missing one or more dependencies: " +
+                    $"{ctorData.ConstructorParameters.Where(x => !Registry.TypeExists(x))}"
+                    );
+            }
+            return ctorData;
         }
 
         private void Register<AbstractType, ConcreteType>(Action registerConctreteType) where AbstractType : class where ConcreteType : class
