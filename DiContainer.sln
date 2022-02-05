@@ -5,9 +5,14 @@ VisualStudioVersion = 16.0.29728.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiContainer", "DiContainer\DiContainer.csproj", "{8E796506-E5B5-47DB-A77A-6C8F230507B9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiContainerLibrary", "DiContainerLibrary\DiContainerLibrary.csproj", "{4206922E-B812-49E4-B43D-E40D68F82E7B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiContainerLibrary", "DiContainerLibrary\DiContainerLibrary.csproj", "{4206922E-B812-49E4-B43D-E40D68F82E7B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiContainerLibraryTests", "DiContainerLibraryTests\DiContainerLibraryTests.csproj", "{465D1681-49CD-4FFF-9A12-5CC60B28D0A1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiContainerLibraryTests", "DiContainerLibraryTests\DiContainerLibraryTests.csproj", "{465D1681-49CD-4FFF-9A12-5CC60B28D0A1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BCC64902-1B99-4F2C-B8C2-0E00165E648C}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

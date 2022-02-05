@@ -43,11 +43,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClassA.cs" />
+    <Compile Include="ClassB.cs" />
+    <Compile Include="ClassC.cs" />
+    <Compile Include="IClassB.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DiContainerLibrary\DiContainerLibrary.csproj">
+      <Project>{4206922E-B812-49E4-B43D-E40D68F82E7B}</Project>
+      <Name>DiContainerLibrary</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

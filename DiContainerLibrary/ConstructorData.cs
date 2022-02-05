@@ -22,7 +22,7 @@ namespace DiContainerLibrary
             Parameters = parameters;
         }
 
-        public static ConstructorData GetConstructorData<ConcreteType>()
+        public static ConstructorData InitializeConstructorData<ConcreteType>()
         {
             var concreteType = typeof(ConcreteType);
             ConstructorInfo[] ctors = concreteType.GetConstructors();
