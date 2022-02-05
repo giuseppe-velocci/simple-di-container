@@ -21,7 +21,7 @@ namespace DiContainerLibrary
         public void RegisterSingleton<InstanceType>() where InstanceType : class
         {
             var ctorData = ConstructorData.InitializeConstructorData<InstanceType>();
-            if (ctorData.Parameters.Any(x => Registry.IsResolverTransient(x)))
+            if (ctorData.ConstructorParameters.Any(x => Registry.IsResolverTransient(x)))
             {
                 throw new ArgumentException($"Singleton class {ctorData.InstanceType.FullName} cannot have transient dependencies");
             }
@@ -44,7 +44,7 @@ namespace DiContainerLibrary
         public void RegisterTransient<InstanceType>()
         {
             var ctorData = ConstructorData.InitializeConstructorData<InstanceType>();
-            if (ctorData.Parameters.Any(x => ! Registry.TypeExists(x)))
+            if (ctorData.ConstructorParameters.Any(x => ! Registry.TypeExists(x)))
             {
                 throw new NullReferenceException();
             }

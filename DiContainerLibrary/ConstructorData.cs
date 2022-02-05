@@ -8,18 +8,18 @@ namespace DiContainerLibrary
     class ConstructorData
     {
         public Type InstanceType { get; }
-        public ConstructorInfo Ctor { get; }
-        public Type[] Parameters { get; }
+        public Type[] ConstructorParameters { get; }
+        private ConstructorInfo Ctor { get; }
 
         private ConstructorData(
             Type instanceType,
             ConstructorInfo ctor,
-            Type[] parameters
+            Type[] constructorParameters
         )
         {
             InstanceType = instanceType;
             Ctor = ctor;
-            Parameters = parameters;
+            ConstructorParameters = constructorParameters;
         }
 
         public static ConstructorData InitializeConstructorData<ConcreteType>()
@@ -37,7 +37,7 @@ namespace DiContainerLibrary
 
         public object BuildInstance(Container container)
         {
-            var parameterInstances = Parameters.Select(x => container.Resolve(x)).ToArray();
+            var parameterInstances = ConstructorParameters.Select(x => container.Resolve(x)).ToArray();
             return Ctor.Invoke(parameterInstances);
         }
     }
