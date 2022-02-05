@@ -1,0 +1,6 @@
+﻿namespace DiContainer
+{
+    class ClassA
+    {
+    }
+}

@@ -7,10 +7,10 @@ namespace DiContainerLibrary
         public Func<object> Resolve { get; }
         public Lifecycle Lifecycle { get; }
 
-        private Resolver(Func<object> resolve, Lifecycle type)
+        private Resolver(Func<object> resolve, Lifecycle lifecycle)
         {
             Resolve = resolve;
-            Lifecycle = type;
+            Lifecycle = lifecycle;
         }
 
         public static Resolver SingletonResolver(Container container, ConstructorData ctorData)
