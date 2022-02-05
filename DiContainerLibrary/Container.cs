@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Collections.Generic;
 
 namespace DiContainerLibrary
 {
@@ -79,13 +78,14 @@ namespace DiContainerLibrary
 
         private void Register<AbstractType, ConcreteType>(Action registerConctreteType) where AbstractType : class where ConcreteType : class
         {
-            Resolver resolver = Registry.FindResolver<ConcreteType>();
+            var concreteType = typeof(ConcreteType);
+            Resolver resolver = Registry.FindResolver(concreteType);
             if (resolver is null)
             {
                 registerConctreteType();
             }
 
-            Resolver abstractTypeResolver = resolver is null ? Registry.FindResolver<ConcreteType>() : resolver;
+            Resolver abstractTypeResolver = resolver is null ? Registry.FindResolver(concreteType) : resolver;
             Registry.Add(typeof(AbstractType), abstractTypeResolver);
         }
     }

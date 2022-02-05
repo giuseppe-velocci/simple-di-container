@@ -17,11 +17,6 @@ namespace DiContainerLibrary
             Registry.Add(instanceType, resolver);
         }
 
-        public Resolver FindResolver<InstanceType>()
-        {
-            return FindResolver(typeof(InstanceType));
-        }
-
         public Resolver FindResolver(Type instanceType)
         {
             Resolver resolver;
